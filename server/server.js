@@ -10,7 +10,7 @@ app.get('/', (req, res) => {
   res.send('Hello from Node!');
 });
 
-const PORT = process.env.PORT || 8090;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}...`);
 });
