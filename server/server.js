@@ -1,7 +1,8 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const Apify = require('apify');
-
+const multer = require('multer');
+const upload = multer();
 const app = express();
 
 
@@ -17,20 +18,18 @@ app.listen(PORT, () => {
 
 
 //app.use(bodyParser.urlencoded({ extended: true }));
+//app.use(bodyParser.json());
 
-app.use(bodyParser.json());
+app.use(upload.array()); 
+app.use(express.static('public'));
 
 app.post('/apify', (req, res) => {
 	
 	console.log("apify");
-	console.log(req.body);
+	console.log(JSON.stringify(req.body.htmlParameter));
 
-  // console.log({
-  //   name: req.body.name,
-  //   message: req.body.message
-  // });
-  if ( req && req.body && req.body.html){
-  	res.send(Apify.utils.social.parseHandlesFromHtml(req.body.html));
+  if ( req && req.body && req.body.htmlParameter){
+  	res.send(Apify.utils.social.parseHandlesFromHtml(req.body.htmlParameter));
   }else{
   	res.send({});	
   }
