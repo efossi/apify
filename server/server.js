@@ -253,17 +253,21 @@ const postContactToForm = ( contactList, formId )=>{
       form.append('mauticform[googleplus]',contact.googleplus);
     }
     
-    try{
-      form.submit( MAUTIC_BASE_URL + '/form/submit', function(err, res) {
-        if (err) {
-          console.error("ERROR posting form: "+JSON.stringify(err));
-        };
-        console.log('Form posted: statusCode:',res.statusCode,' res.data:', res.data);
-      } );       
+    //Only post contacts with email
+    if ( contact.email ){
+      try{
+        form.submit( MAUTIC_BASE_URL + '/form/submit', function(err, res) {
+          if (err) {
+            console.error("ERROR posting form: "+JSON.stringify(err));
+          };
+          console.log('Form posted: statusCode:',res.statusCode,' res.data:', res.data);
+        } );       
 
-    }catch(e){
-      console.log('Error posting form:',e);
+      }catch(e){
+        console.log('Error posting form:',e);
+      }
     }
+
   })
 }
 
