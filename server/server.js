@@ -10,6 +10,7 @@ const app = express();
 
 const MAUTIC_BASE_URL = 'https://mautic.beebl.io';
 const MAUTIC_FORM_ID = '3';
+const MAUTIC_CALL_FREQ = 1500; //One call every 1.5 seconds
 
 
 app.get('/', (req, res) => {
@@ -213,13 +214,13 @@ const saveContactDetailsToDB = (contactList, url)=>{
       values.push(contact.googleplus);
     }
     insertIntoDB('external_leads', columns, values);
-  })
- 
+  }) 
 }
 
-const postContactToForm = ( contactList, formId )=>{
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  contactList.forEach(contact=>{
+const postContactToForm = ( contactList, formId )=>{
+  contactList.forEach( async(contact)=>{
     const form = new FormData();
     form.append('mauticform[formId]',formId);
     form.append('mauticform[messenger]','1');
@@ -256,6 +257,9 @@ const postContactToForm = ( contactList, formId )=>{
     //Only post contacts with email
     if ( contact.email ){
       try{
+
+        await sleep(MAUTIC_CALL_FREQ);
+        
         form.submit( MAUTIC_BASE_URL + '/form/submit', function(err, res) {
           if (err) {
             console.error("ERROR posting form: "+JSON.stringify(err));
@@ -284,3 +288,5 @@ const insertIntoDB = (table, columns, values)=>{
     }
   });
 }
+
+
