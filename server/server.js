@@ -5,13 +5,12 @@ const multer = require('multer');
 const mysqlDb = require('./db/mysqlDb');
 const FormData = require('form-data');
 const URL = require('url');
-
+require('log-timestamp');
 const upload = multer();
 const app = express();
 
-const MAUTIC_BASE_URL = 'https://mautic.beebl.io';
-const MAUTIC_FORM_ID = '3';
-const MAUTIC_CALL_FREQ = process.env.MAUTIC_POST_RATE || 3000; //One call every 3.0 seconds
+const MAUTIC_BASE_URL = process.env.MAUTIC_URL || 'https://m2.beebl.io';
+const MAUTIC_FORM_ID = process.env.MAUTIC_FORM_ID || '3';
 
 
 app.get('/', (req, res) => {
@@ -37,7 +36,7 @@ app.post('/apify', (req, res) => {
 
     if ( contactDetails ){
       const contactList = contactDetails2List(contactDetails, req.body.url);
-      console.log('ContactDetails: %s, ContactList: %s', JSON.stringify(contactDetails), JSON.stringify(contactList) );
+      console.log('Url: %s, ContactDetails: %s, ContactList: %s ', req.body.url, JSON.stringify(contactDetails), JSON.stringify(contactList) );
       saveContactDetailsToDB(contactList, req.body.url);
       postContactToForm(contactList,MAUTIC_FORM_ID);
     }
@@ -171,6 +170,8 @@ const contactDetails2List = (contactDetails, url) =>{
 }
 
 const saveContactDetailsToDB = (contactList, url)=>{
+  const queries = [];
+
   contactList.forEach(contact=>{
     const columns = ['url'];
     const values = [url];
@@ -219,14 +220,16 @@ const saveContactDetailsToDB = (contactList, url)=>{
       columns.push('googleplus');
       values.push(contact.googleplus);
     }
+    //queries.push(insertiontQuery('external_leads', columns, values))
     insertIntoDB('external_leads', columns, values);
-  }) 
+  });
+
 }
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const postContactToForm = ( contactList, formId )=>{
-  contactList.forEach( async(contact)=>{
+  contactList.forEach( contact => {
     const form = new FormData();
     form.append('mauticform[formId]',formId);
     form.append('mauticform[messenger]','1');
@@ -266,8 +269,6 @@ const postContactToForm = ( contactList, formId )=>{
     //Only post contacts with email
     if ( contact.email ){
       try{
-        console.log('Waiting for %s millis before sending request to Mautic',MAUTIC_CALL_FREQ);
-        await sleep(MAUTIC_CALL_FREQ);
 
         form.submit( MAUTIC_BASE_URL + '/form/submit', function(err, res) {
           if (err) {
@@ -296,6 +297,25 @@ const insertIntoDB = (table, columns, values)=>{
       console.log("Insertion into table:", table, JSON.stringify(data));
     }
   });
+}
+
+const runQueryToDB = (query)=>{
+  console.log("runQueryToDB - query:", query);
+  mysqlDb.query(query, null, function (data, error) {       
+    if (error){
+      console.log("Error while running query: "+ JSON.stringify(error));
+    }else{
+      console.log("Query result:", table, JSON.stringify(data));
+    }
+  });
+}
+
+const insertiontQuery = (table, columns, values)=>{
+
+  const query = "insert into "+table+" (" + columns.join(',') + 
+  ") values (" + values.map(v => `'${v}'`).join(',') + ")" ;
+  console.log("insertiontQuery into table: query:", query);
+  return query;
 }
 
 
