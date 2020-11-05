@@ -4,13 +4,14 @@ const Apify = require('apify');
 const multer = require('multer');
 const mysqlDb = require('./db/mysqlDb');
 const FormData = require('form-data');
+const URL = require('url');
 
 const upload = multer();
 const app = express();
 
 const MAUTIC_BASE_URL = 'https://mautic.beebl.io';
 const MAUTIC_FORM_ID = '3';
-const MAUTIC_CALL_FREQ = 1500; //One call every 1.5 seconds
+const MAUTIC_CALL_FREQ = process.env.MAUTIC_POST_RATE || 3000; //One call every 3.0 seconds
 
 
 app.get('/', (req, res) => {
@@ -35,7 +36,7 @@ app.post('/apify', (req, res) => {
     const contactDetails = Apify.utils.social.parseHandlesFromHtml(req.body.htmlParameter);
 
     if ( contactDetails ){
-      const contactList = contactDetails2List(contactDetails);
+      const contactList = contactDetails2List(contactDetails, req.body.url);
       console.log('ContactDetails: %s, ContactList: %s', JSON.stringify(contactDetails), JSON.stringify(contactList) );
       saveContactDetailsToDB(contactList, req.body.url);
       postContactToForm(contactList,MAUTIC_FORM_ID);
@@ -101,7 +102,7 @@ const extractNameFromEmailCamelCase = (email)=>{
   return {fn:firstName, ln:lastName, mn:middleName};
 }
 
-const contactDetails2List = (contactDetails) =>{
+const contactDetails2List = (contactDetails, url) =>{
   const contactList = [];
   Object.keys(contactDetails).forEach(function(key) {
     const values = contactDetails[key];
@@ -123,6 +124,7 @@ const contactDetails2List = (contactDetails) =>{
           firstname_unsure: emailDetails.fn,
           lastname_unsure: emailDetails.ln,
           middlename_unsure: emailDetails.mn,
+          company_unsure: (url && url.length>0) ? URL.parse(url).hostname : ''
         });
       });
     }
@@ -189,6 +191,10 @@ const saveContactDetailsToDB = (contactList, url)=>{
       columns.push('middlename_unsure');
       values.push(capitalize(contact.middlename_unsure));
     }
+    if( contact.company_unsure ){
+      columns.push('company_unsure');
+      values.push(contact.company_unsure);
+    }    
     if( contact.phone ){
       columns.push('phone');
       values.push(contact.phone);
@@ -232,6 +238,9 @@ const postContactToForm = ( contactList, formId )=>{
     if( contact.firstname_unsure ){
       form.append('mauticform[first_name]',capitalize(contact.firstname_unsure));
     }
+    if( contact.company_unsure ){
+      form.append('mauticform[company]',contact.company_unsure);
+    }    
     if( contact.lastname_unsure ){
       form.append('mauticform[last_name]',capitalize(contact.lastname_unsure));
     }
@@ -257,9 +266,9 @@ const postContactToForm = ( contactList, formId )=>{
     //Only post contacts with email
     if ( contact.email ){
       try{
-
+        console.log('Waiting for %s millis before sending request to Mautic',MAUTIC_CALL_FREQ);
         await sleep(MAUTIC_CALL_FREQ);
-        
+
         form.submit( MAUTIC_BASE_URL + '/form/submit', function(err, res) {
           if (err) {
             console.error("ERROR posting form: "+JSON.stringify(err));
@@ -280,11 +289,11 @@ const insertIntoDB = (table, columns, values)=>{
   const query = "insert into "+table+" (" + columns.join(',') + 
   ") values (" + values.map(v => `'${v}'`).join(',') + ")" ;
   console.log("Inserting into table: query:", query);
-
-  mysqlDb.query(query, null, function (data, error) { 
-    console.log("Insertion into table:", table, JSON.stringify(data));  
+  mysqlDb.query(query, null, function (data, error) {       
     if (error){
       console.log("Error while inserting into table: "+ JSON.stringify(error));
+    }else{
+      console.log("Insertion into table:", table, JSON.stringify(data));
     }
   });
 }
