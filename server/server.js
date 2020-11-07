@@ -38,7 +38,7 @@ app.post('/apify', (req, res) => {
       contactList = contactDetails2List(contactDetails, req.body.url);
       console.log('Url: %s, ContactDetails: %s, ContactList: %s ', req.body.url, JSON.stringify(contactDetails), JSON.stringify(contactList) );
       saveContactDetailsToDB(contactList, req.body.url);
-      postContactToForm(contactList,MAUTIC_FORM_ID);
+      // postContactToForm(contactList,MAUTIC_FORM_ID);
     }
   	res.send({contactList:contactList, details:contactDetails});
   }else{
