@@ -33,14 +33,14 @@ app.post('/apify', (req, res) => {
 
   if ( req && req.body && req.body.htmlParameter){
     const contactDetails = Apify.utils.social.parseHandlesFromHtml(req.body.htmlParameter);
-
+    let contactList = []
     if ( contactDetails ){
-      const contactList = contactDetails2List(contactDetails, req.body.url);
+      contactList = contactDetails2List(contactDetails, req.body.url);
       console.log('Url: %s, ContactDetails: %s, ContactList: %s ', req.body.url, JSON.stringify(contactDetails), JSON.stringify(contactList) );
       saveContactDetailsToDB(contactList, req.body.url);
       postContactToForm(contactList,MAUTIC_FORM_ID);
     }
-  	res.send(contactDetails);
+  	res.send({contactList:contactList, details:contactDetails});
   }else{
   	res.send({});	
   }  
