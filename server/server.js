@@ -147,8 +147,8 @@ const acceptableEmail = async (email) => {
   
   const doNotContact = await promiseOfQuery('select l.email from leads l join lead_donotcontact dnc on l.id = dnc.lead_id where l.email = ?', email);
   console.log('doNotContact result:',doNotContact);
-  if ( doNotContact ){
-    console.log('Fount email in do-not-contact', email);
+  if ( doNotContact && doNotContact.length > 0 ){
+    console.log('Found email in do-not-contact', email);
     return false;
   }
   // const prohibitedN = prohibitedEmailMatches.filter( d => email.toLowerCase().indexOf(d) > -1 );
@@ -312,8 +312,11 @@ const setDoNotContact = async ( contact )=>{
       const idQueryRes = await promiseOfQuery ( `select id from leads where email='${contact.email}'`, null );
 
       console.log('idQueryRes: ', idQueryRes);
-
-      const insertQuery = `insert into lead_donotcontact(lead_id , date_added , reason , channel , channel_id , comments) values((select id from leads where email='${contact.email}'),now(),'1','email',39,'User unsubscribed by external API');`;
+      if( idQueryRes && idQueryRes.length > 0){
+        const leadId = idQueryRes[0].id
+        console.log('leadId: ', leadId);
+        const insertQuery = `insert into lead_donotcontact(lead_id , date_added , reason , channel , channel_id , comments) values('${leadId}',now(),'1','email',39,'User unsubscribed by external API');`;
+      }
       const queryRes = await promiseOfQuery ( insertQuery, null );
       return queryRes;    
 
