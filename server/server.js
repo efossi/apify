@@ -31,6 +31,14 @@ app.listen(PORT, () => {
 app.use('/apify', [ upload.array(), express.static('public') ] ); 
 app.use('/ses', bodyParser.json());
 
+app.use(function(req, res, next) {
+  if (req.get("x-amz-sns-message-type")) {
+//otherwise content-type is text for topic confirmation reponse, and body is empty    
+    req.headers["content-type"] = "application/json"; 
+  }
+  next();
+});
+
 app.post('/apify', (req, res) => {
 
   if ( req && req.body && req.body.htmlParameter){
@@ -480,11 +488,12 @@ const handleSnsNotification = async (req, res) => {
 };
 
 const handleResponse = async (topicArn, req, res) => {
-  console.log('handleResponse topicArn, req',topicArn, req);
+  
   if (
     req.headers["x-amz-sns-message-type"] === "Notification" &&
     req.body.Message
   ) {
+    console.log('handleResponse - notification topicArn, req.body',topicArn, req.body);
     await handleSnsNotification(req, res);
   } else if (
     req.headers["x-amz-sns-message-type"] === "SubscriptionConfirmation"
@@ -494,6 +503,8 @@ const handleResponse = async (topicArn, req, res) => {
       TopicArn: topicArn
     };
 
+    console.log('handleResponse - SubscriptionConfirmation topicArn, req.body',topicArn, req.body);
+    console.log('handleResponse - arn' + req.get('x-amz-sns-topic-arn'));
     sns.confirmSubscription(params, function(err, data) {
       if (err) throw err; // an error occurred
       console.error("handleResponse - data:", data);
