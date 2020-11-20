@@ -25,11 +25,6 @@ app.listen(PORT, () => {
 });
 
 
-// app.use(bodyParser.urlencoded({ extended: true }));
-//app.use(bodyParser.json());
-
-app.use('/apify', [ upload.array(), express.static('public') ] ); 
-app.use('/ses', bodyParser.json());
 
 app.use(function(req, res, next) {
   if (req.get("x-amz-sns-message-type")) {
@@ -41,6 +36,10 @@ app.use(function(req, res, next) {
   }
   next();
 });
+
+app.use('/apify', [ upload.array(), express.static('public') ] ); 
+app.use('/ses', bodyParser.json());
+
 
 app.post('/apify', (req, res) => {
 
