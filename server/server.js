@@ -553,6 +553,14 @@ app.post('/ses/do-not-contact', async (req, res) => {
 });
 
 app.post('/ses/handle-bounces', async (req, res) => {
+
+  if (req.get("x-amz-sns-message-type")) {
+    console.log('GOT2 - x-amz-sns-message-type CT:',req.headers["content-type"]);
+    req.headers["content-type"] = "application/json"; 
+  }else{
+    console.log('NO2 - x-amz-sns-message-type');
+  }
+
   try {
     await handleResponse(topicArnBounce, req, res);
 
@@ -569,6 +577,14 @@ app.post('/ses/handle-bounces', async (req, res) => {
 });
 
 app.post('/ses/handle-complaints', async (req, res) => {
+
+  if (req.get("x-amz-sns-message-type")) {
+    console.log('GOT3 - x-amz-sns-message-type CT:',req.headers["content-type"]);
+    req.headers["content-type"] = "application/json"; 
+  }else{
+    console.log('NO3 - x-amz-sns-message-type');
+  }
+
   try {
     await handleResponse(topicArnComplaint, req, res);
 
