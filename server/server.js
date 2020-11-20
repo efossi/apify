@@ -444,7 +444,7 @@ sns.subscribe(paramsTopicComplaints, function(error, data) {
 });
 
 const handleSnsNotification = async (req, res) => {
-  console.log('handleSnsNotification req, res :',req, res);
+  console.log('handleSnsNotification req :',req);
   const message = JSON.parse(req.body.Message);
   console.log('handleSnsNotification message :',message);
 
@@ -480,7 +480,7 @@ const handleSnsNotification = async (req, res) => {
 };
 
 const handleResponse = async (topicArn, req, res) => {
-  console.log('handleResponse topicArn, req, res',topicArn, req, res);
+  console.log('handleResponse topicArn, req',topicArn, req);
   if (
     req.headers["x-amz-sns-message-type"] === "Notification" &&
     req.body.Message
@@ -511,11 +511,11 @@ app.post('/ses/do-not-contact', async (req, res) => {
 
       if ( email && email.includes("@") ) {
         try{
-          const res = await setDoNotContact( {email:email } );
-          if (res){
+          const doNotContactRes = await setDoNotContact( {email:email } );
+          if (doNotContactRes){
             res.status(200).json({
               success: true,
-              message: res
+              message: doNotContactRes
             });
           }else {
             res.status(404).json({
@@ -530,7 +530,6 @@ app.post('/ses/do-not-contact', async (req, res) => {
               message: err
           });
         }
-
       }
     }else{
       res.status(404).json({
@@ -538,8 +537,6 @@ app.post('/ses/do-not-contact', async (req, res) => {
         message: "Missing email parameter"
       });    
     }
-
-
 });
 
 app.post('/ses/handle-bounces', async (req, res) => {
