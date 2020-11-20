@@ -454,7 +454,6 @@ sns.subscribe(paramsTopicComplaints, function(error, data) {
 });
 
 const handleSnsNotification = async (req, res) => {
-  console.log('handleSnsNotification req :',req);
   const message = JSON.parse(req.body.Message);
   console.log('handleSnsNotification message :',message);
 
@@ -504,9 +503,6 @@ const handleResponse = async (topicArn, req, res) => {
       Token: req.body.Token,
       TopicArn: topicArn
     };
-
-    console.log('handleResponse - SubscriptionConfirmation topicArn, req.body',topicArn, req.body);
-    console.log('handleResponse - arn' + req.get('x-amz-sns-topic-arn'));
     sns.confirmSubscription(params, function(err, data) {
       if (err) throw err; // an error occurred
       console.error("handleResponse - data:", data);
@@ -553,22 +549,15 @@ app.post('/ses/do-not-contact', async (req, res) => {
 });
 
 app.post('/ses/handle-bounces', async (req, res) => {
-
-  if (req.get("x-amz-sns-message-type")) {
-    console.log('GOT2 - x-amz-sns-message-type CT:',req.headers["content-type"]);
-    req.headers["content-type"] = "application/json"; 
-  }else{
-    console.log('NO2 - x-amz-sns-message-type');
-  }
-
   try {
     await handleResponse(topicArnBounce, req, res);
-
+    console.log("Successfully handled bounce:");
     res.status(200).json({
       success: true,
       message: "Successfully received message"
     });
   } catch (error) {
+    console.error("Error handling response:", error);
     res.status(500).json({
       success: false,
       message: error.message
@@ -578,21 +567,15 @@ app.post('/ses/handle-bounces', async (req, res) => {
 
 app.post('/ses/handle-complaints', async (req, res) => {
 
-  if (req.get("x-amz-sns-message-type")) {
-    console.log('GOT3 - x-amz-sns-message-type CT:',req.headers["content-type"]);
-    req.headers["content-type"] = "application/json"; 
-  }else{
-    console.log('NO3 - x-amz-sns-message-type');
-  }
-
   try {
     await handleResponse(topicArnComplaint, req, res);
-
+    console.log("Successfully handled complaint:");
     res.status(200).json({
       success: true,
       message: "Successfully received message."
     });
   } catch (error) {
+    console.error("Error handling response:", error);
     res.status(500).json({
       success: false,
       message: error.message
