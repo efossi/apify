@@ -34,7 +34,10 @@ app.use('/ses', bodyParser.json());
 app.use(function(req, res, next) {
   if (req.get("x-amz-sns-message-type")) {
 //otherwise content-type is text for topic confirmation reponse, and body is empty    
+    console.log('GOT - x-amz-sns-message-type CT:',req.headers["content-type"]);
     req.headers["content-type"] = "application/json"; 
+  }else{
+    console.log('NO - x-amz-sns-message-type');
   }
   next();
 });
