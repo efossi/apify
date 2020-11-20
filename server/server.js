@@ -494,7 +494,7 @@ const handleResponse = async (topicArn, req, res) => {
     req.headers["x-amz-sns-message-type"] === "Notification" &&
     req.body.Message
   ) {
-    console.log('handleResponse - notification topicArn, req.body',topicArn, req.body);
+    // console.log('handleResponse - notification topicArn, req.body',topicArn, req.body);
     await handleSnsNotification(req, res);
   } else if (
     req.headers["x-amz-sns-message-type"] === "SubscriptionConfirmation"
@@ -548,31 +548,13 @@ app.post('/ses/do-not-contact', async (req, res) => {
     }
 });
 
-app.post('/ses/handle-bounces', async (req, res) => {
+app.post('/ses/handle-bounces-and-complaints', async (req, res) => {
   try {
     await handleResponse(topicArnBounce, req, res);
-    console.log("Successfully handled bounce:");
+    console.log("Successfully handled bounce-complaint:");
     res.status(200).json({
       success: true,
       message: "Successfully received message"
-    });
-  } catch (error) {
-    console.error("Error handling response:", error);
-    res.status(500).json({
-      success: false,
-      message: error.message
-    });
-  }
-});
-
-app.post('/ses/handle-complaints', async (req, res) => {
-
-  try {
-    await handleResponse(topicArnComplaint, req, res);
-    console.log("Successfully handled complaint:");
-    res.status(200).json({
-      success: true,
-      message: "Successfully received message."
     });
   } catch (error) {
     console.error("Error handling response:", error);
