@@ -316,10 +316,9 @@ const setDoNotContact = async ( contact )=>{
         const leadId = idQueryRes[0].id
         console.log('leadId: ', leadId);
         const insertQuery = `insert into lead_donotcontact(lead_id , date_added , reason , channel , channel_id , comments) values('${leadId}',now(),'1','email',39,'User unsubscribed by external API');`;
+        const queryRes = await promiseOfQuery ( insertQuery, null );
+        return queryRes;    
       }
-      const queryRes = await promiseOfQuery ( insertQuery, null );
-      return queryRes;    
-
     }catch(e){
       console.log('Error posting form:',e);
     }
