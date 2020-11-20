@@ -355,7 +355,7 @@ const runQueryToDB = (query)=>{
     if (error){
       console.log("Error while running query: "+ JSON.stringify(error));
     }else{
-      console.log("Query result:", table, JSON.stringify(data));
+      console.log("Query result:", JSON.stringify(data));
     }
   });
 }
@@ -398,7 +398,7 @@ const promiseOfQuery = ( query, params ) => {
         reject(error);
       }else{
         resolve(data);
-        console.log("Query result:", table, JSON.stringify(data));
+        console.log("Query result:", JSON.stringify(data));
       }
     });    
   });
