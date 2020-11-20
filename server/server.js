@@ -29,10 +29,7 @@ app.listen(PORT, () => {
 app.use(function(req, res, next) {
   if (req.get("x-amz-sns-message-type")) {
 //otherwise content-type is text for topic confirmation reponse, and body is empty    
-    console.log('GOT - x-amz-sns-message-type CT:',req.headers["content-type"]);
     req.headers["content-type"] = "application/json"; 
-  }else{
-    console.log('NO - x-amz-sns-message-type');
   }
   next();
 });
@@ -312,6 +309,10 @@ const setDoNotContact = async ( contact )=>{
   if ( contact.email ){
     try{
 
+      const idQueryRes = await promiseOfQuery ( `select id from leads where email='${contact.email}'`, null );
+
+      console.log('idQueryRes: ', idQueryRes);
+
       const insertQuery = `insert into lead_donotcontact(lead_id , date_added , reason , channel , channel_id , comments) values((select id from leads where email='${contact.email}'),now(),'1','email',39,'User unsubscribed by external API');`;
       const queryRes = await promiseOfQuery ( insertQuery, null );
       return queryRes;    
@@ -455,7 +456,7 @@ sns.subscribe(paramsTopicComplaints, function(error, data) {
 
 const handleSnsNotification = async (req, res) => {
   const message = JSON.parse(req.body.Message);
-  console.log('handleSnsNotification message :',message);
+  // console.log('handleSnsNotification message :',message);
 
   if (
     (message && message.notificationType == "Bounce") ||
