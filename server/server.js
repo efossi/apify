@@ -137,6 +137,9 @@ const acceptableEmail = async (email) => {
                         '^-', //starts with -
                         '%',
                         '=',
+// Adding info@... because of the high number of 
+// complaints. This can be revisted, and removed in the future
+                        '^info@',
                         '^me@',
                         '^mail@',
                         '^user@',
@@ -196,7 +199,9 @@ const acceptableEmail = async (email) => {
                         '^user1@',
                         '^user2@',
                         '^webinfo@',
-                        'subscribe@'
+                        'subscribe@',
+                        '^hi@'
+
 
                         ];
 
@@ -209,6 +214,17 @@ const acceptableEmail = async (email) => {
   const prohibitedDomains = [
                               'apache.org',
                               'apachecon.com',
+                              'amazonses.com',
+// Adding these domains @comcast.net, '@inbox.ru', etc...
+ // because of the high number of 
+// complaints. This can be revisted, and removed in the future
+                              'comcast.net',
+                              '@zoominternet.net',
+                              '@usa.net',
+                              '@mail.ru',
+                              '@inbox.ru',
+                              '@reagan.com',
+
                            ];
                            
   // Exclude email from prohibitedDomains, then
