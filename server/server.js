@@ -38,13 +38,13 @@ app.use('/apify', [ upload.array(), express.static('public') ] );
 app.use('/ses', bodyParser.json());
 
 
-app.post('/apify', (req, res) => {
+app.post('/apify', async (req, res) => {
 
   if ( req && req.body && req.body.htmlParameter){
     const contactDetails = Apify.utils.social.parseHandlesFromHtml(req.body.htmlParameter);
     let contactList = []
     if ( contactDetails ){
-      contactList = contactDetails2List(contactDetails, req.body.url);
+      contactList = await contactDetails2List(contactDetails, req.body.url);
       console.log('Url: %s, ContactDetails: %s, ContactList: %s ', req.body.url, JSON.stringify(contactDetails), JSON.stringify(contactList) );
       saveContactDetailsToDB(contactList, req.body.url);
       // postContactToForm(contactList,MAUTIC_FORM_ID);
@@ -117,10 +117,88 @@ const extractNameFromEmailCamelCase = (email)=>{
 
 const acceptableEmail = async (email) => {
 
+  if( !email || email.length < 9 || email.length > 30 ){
+    return false;
+  }
+
+   
+  const reToExclude = [
  // To remove emails like
  // rizwest1975@yahoo.comm    
- // Hotro.ttvnol@gmail.comli    
-  const reToExclude = ['@.*\.com[a-zA-Z0-9]+'];
+ // Hotro.ttvnol@gmail.comli 
+                        '@.*\.com[a-zA-Z0-9]+',
+                        '\#',
+                        '\\$',
+                        '\!',
+                        '\\*',
+                        '\\|',
+                        '\\^',
+                        '\\?',
+                        '^-', //starts with -
+                        '%',
+                        '=',
+                        '^me@',
+                        '^mail@',
+                        '^user@',
+                        '^email',
+                        '^help@',
+                        '^hr@',
+                        '^cs@',
+                        '^legal@',
+                        '^user@',
+                        '^your@',
+                        '^license@',
+                        '^job@',
+                        '^jobs@',
+                        '^bugs@',
+                        '^you@',
+                        '^www@',
+                        '^xyz@',
+                        '^test',
+                        '^suporte@',
+                        '^service@',
+                        '^recruit@',
+                        '^privacy@',
+                        '^press@',
+                        '^pr@',
+                        '^policy@',
+                        '^policies@',
+                        '^password@',
+                        '^office@',
+                        '^example@',
+                        '^copyright@',
+                        '^contact',
+                        '^abc@',
+                        '^bounce@',
+                        '^admin@',
+                        '^sales@',
+                        '^service@',
+                        '^support@',
+                        '^abuse@',
+                        '^comercial@',
+                        '^contact@',
+                        '^contacto@',
+                        '^contactus@',
+                        '^contato@',
+                        '^hello@',
+                        '^hire@',
+                        '^mailbox@',
+                        '^mailmaster@',
+                        '^mailpoint@',
+                        '^finaid@',
+                        '^feedback@',
+                        '^finance@',
+                        '^financial.aid@',
+                        '^cloud@',
+                        '^advertise@',
+                        '^advertising@',
+                        '^privacy@',
+                        '^user1@',
+                        '^user2@',
+                        '^webinfo@',
+                        'subscribe@'
+
+                        ];
 
 
   const acceptableDomains = ['comcastbiz.net', 
@@ -129,10 +207,8 @@ const acceptableEmail = async (email) => {
                            'commnet.edu'];
 
   const prohibitedDomains = [
-                           //  '@mail.ru', 
-                           // '@inbox.ru', 
-                           // '@gpsmcard.ru',
-                           // '@shakespeare-online.com'
+                              'apache.org',
+                              'apachecon.com',
                            ];
                            
   // Exclude email from prohibitedDomains, then
@@ -145,14 +221,92 @@ const acceptableEmail = async (email) => {
 
 // Make sure the email is not on the do-not-contact list
   
-  const doNotContact = await promiseOfQuery('select l.email from leads l join lead_donotcontact dnc on l.id = dnc.lead_id where l.email = ?', email);
-  console.log('doNotContact result:',doNotContact);
-  if ( doNotContact && doNotContact.length > 0 ){
-    console.log('Found email in do-not-contact', email);
+
+  const prohibitedEmailMatches = ['webmaster@',
+                                  'technicalsupport',
+                                  'customersupport',
+                                  'customer-service',
+                                  'customer.care',
+                                  'customer.service',
+                                  'apache.org',
+                                  'apachecon.com',
+                                  'yourdomain.tld',
+                                  '@company.org',
+                                  '@example.com',
+                                  'noreply',
+                                  'no-reply',
+                                  'donotreply',
+                                  '@host.domain',
+                                  '@domain.',
+                                  '@email.',
+                                  '@yourdomain',
+                                  'yourname@',
+                                  'yourmail@',
+                                  '@email.com',
+                                  '@email.address',
+                                  'your_username@',
+                                  'username@',
+                                  'your-name@',
+                                  'xyz@',
+                                  '@abc.com',
+                                  '@xxx',
+                                  '@xx.xx',
+                                  'xxx@',
+                                  '@yyy',
+                                  'yyy@',
+                                  '@test.',
+                                  '@mydomain.com',
+                                  '@xx.xx',
+                                  'www.',
+                                  '@addr.com',
+                                  '@example.com',
+                                  'work@',
+                                  'webteam@',
+                                  'suport@',
+                                  'support',
+                                  'staff@',
+                                  '@nowhere.com',
+                                  '@somewhere.com',
+                                  'someone@',
+                                  'somebody@',
+                                  'site@',
+                                  'servicio@',
+                                  'service@',
+                                  'services@',
+                                  'servicio.cliente@',
+                                  'server@',
+                                  'sender@',
+                                  'sender1@',
+                                  'security@',
+                                  'root@',
+                                  'resume@',
+                                  'report@',
+                                  'reply@',
+                                  'quest@',
+                                  'questions@',
+                                  'postmaster@',
+                                  'office@',
+                                  '@localhost.com',
+                                  '@null.net',
+                                  '@somewhere.com',
+                                  '`',
+                                  '.lastname@',
+                                  '.firstname@',
+                                  'helpdesk',
+                                  'announce',
+                                  "'",
+                                  '"'
+                                ]; 
+  const prohibitedN = prohibitedEmailMatches.filter( d => email.toLowerCase().indexOf(d) > -1 );
+  if ( prohibitedN && prohibitedN.length > 0){
     return false;
   }
-  // const prohibitedN = prohibitedEmailMatches.filter( d => email.toLowerCase().indexOf(d) > -1 );
-  // if ( prohibitedN && prohibitedN.length > 0){
+
+  // Enabling this would severely impact the performance. And there is no much benefit for it
+  // const doNotContact = await promiseOfQuery('select l.email from leads l join lead_donotcontact dnc on l.id = dnc.lead_id where l.email = ?', email);
+  // console.log('doNotContact result:',doNotContact);
+  // if ( doNotContact && doNotContact.length > 0 ){
+  //   console.log('Found email in do-not-contact', email);
   //   return false;
   // }
 
@@ -160,7 +314,7 @@ const acceptableEmail = async (email) => {
   if (domains && domains.length > 0){
     return true;
   }else{
-    const res = reToExclude.filter( ( re ) => email.match(new RegExp(re) ));
+    const res = reToExclude.filter( ( re ) => email.toLowerCase().match(new RegExp(re) ));
     if ( res && res.length > 0){
       return false;
     }else{
@@ -171,17 +325,24 @@ const acceptableEmail = async (email) => {
 
 
 
-const contactDetails2List = (contactDetails, url) =>{
+const contactDetails2List = async (contactDetails, url) =>{
   const contactList = [];
 
+  const objectKeys = Object.keys(contactDetails);
 
-  Object.keys(contactDetails).forEach(function(key) {
+  await objectKeys.reduce( async (memo1, key) => {
+    await memo1;
+
     const values = contactDetails[key];
 
-    if ( key === 'emails' && values && values.length ){
-      values.forEach(v=>{
+    if ( key === 'emails' && values && values.length > 0){
+      await values.reduce( async (memo, v) => {
+
+        await memo;
+
         // Filter out invalid email
-        if(v && acceptableEmail(v) ){
+        const testAcceptability = await acceptableEmail(v);
+        if(v && testAcceptability ){
           let emailDetails = extractNameFromEmail(v, '.');
 
           if( !emailDetails.fn && !emailDetails.ln) {
@@ -201,9 +362,8 @@ const contactDetails2List = (contactDetails, url) =>{
         }else {
           console.log("Unacceptable email: ", v);
         }
-      });
+      }, undefined);
     }
-
     if ( key === 'phones' && values && values.length ){
 
       values.forEach(v=>{ 
@@ -240,7 +400,9 @@ const contactDetails2List = (contactDetails, url) =>{
         contactList.push({googleplus:v});
       })
     }
-  });
+
+  },undefined);
+
   return contactList;
 }
 
@@ -308,16 +470,11 @@ const setDoNotContact = async ( contact )=>{
   //Only contacts with email
   if ( contact.email ){
     try{
-
       const idQueryRes = await promiseOfQuery ( `select id from leads where email='${contact.email}'`, null );
-
-      console.log('idQueryRes: ', idQueryRes);
       if( idQueryRes && idQueryRes.length > 0){
         const leadId = idQueryRes[0].id
-        console.log('leadId: ', leadId);
         const insertQuery = `insert into lead_donotcontact(lead_id , date_added , reason , channel , channel_id , comments) values('${leadId}',now(),'1','email',39,'User unsubscribed by external API');`;
-        const queryRes = await promiseOfQuery ( insertQuery, null );
-        return queryRes;    
+        return  await promiseOfQuery ( insertQuery, null );
       }
     }catch(e){
       console.log('Error posting form:',e);
