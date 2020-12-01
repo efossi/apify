@@ -115,102 +115,195 @@ const extractNameFromEmailCamelCase = (email)=>{
   return {fn:firstName, ln:lastName, mn:middleName};
 }
 
-const acceptableEmail = async (email) => {
+const reToExcludeForWellForm = [
+// To remove emails like
+// rizwest1975@yahoo.comm    
+// Hotro.ttvnol@gmail.comli 
+                      '@.*\.com[a-zA-Z0-9]+',
+                      '\#',
+                      '\\$',
+                      '\!',
+                      '\\*',
+                      '\\|',
+                      '\\^',
+                      '\\?',
+                      '\\{',
+                      '\\}',
+                      '\\(',
+                      '\\)',
+                      '^-', //starts with -
+                      '%',
+                      '=',
+                      '`',
+                      "'",
+                      '"',
+
+                      'yourdomain\.tld',
+                      '@company\.org',
+                      '@example\.com',
+                      'noreply',
+                      'no-reply',
+                      'donotreply',
+                      '@host\.domain',
+                      '@domain\.',
+                      '@email\.',
+                      '@yourdomain',
+                      'yourname@',
+                      'yourmail@',
+                      '@email\.com',
+                      '@email\.address',
+                      'your_username@',
+                      'username@',
+                      'your-name@',
+                      '@xxx',
+                      '@xx\.xx',
+                      'xxx@',
+                      '@yyy',
+                      'yyy@',
+                      '@test\.',
+                      '@mydomain\.com',
+                      '@xx\.xx',
+                      'www\.',
+                      '@addr\.com',
+                      '@example\.com',
+                      '@nowhere\.com',
+                      '@somewhere\.com',
+                      'someone@',
+                      'somebody@',
+                      'sender@',
+                      'sender1@',
+                      'root@',
+                      '@localhost\.com',
+                      '@null\.net',
+                      '@somewhere\.com',
+                      '\.lastname@',
+                      '\.firstname@',
+                      ];                      
+
+const reToExcludeForLowBounce = [
+// Adding info@... because of the high number of 
+// complaints. This can be revisted, and removed in the future
+                      '^info@',
+                      '^me@',
+                      '^mail@',
+                      '^user@',
+                      '^email',
+                      '^help@',
+                      '^hr@',
+                      '^cs@',
+                      '^legal@',
+                      '^user@',
+                      '^your@',
+                      '^license@',
+                      '^job@',
+                      '^jobs@',
+                      '^bugs@',
+                      '^you@',
+                      '^www@',
+                      '^xyz@',
+                      '^test',
+                      '^suporte@',
+                      '^service@',
+                      '^recruit@',
+                      '^privacy@',
+                      '^press@',
+                      '^pr@',
+                      '^policy@',
+                      '^policies@',
+                      '^password@',
+                      '^office@',
+                      '^example@',
+                      '^copyright@',
+                      '^contact',
+                      '^abc@',
+                      '^bounce@',
+                      '^admin@',
+                      '^sales@',
+                      '^service@',
+                      '^support@',
+                      '^abuse@',
+                      '^comercial@',
+                      '^contact@',
+                      '^contacto@',
+                      '^contactus@',
+                      '^contato@',
+                      '^hello@',
+                      '^hire@',
+                      '^mailbox@',
+                      '^mailmaster@',
+                      '^mailpoint@',
+                      '^finaid@',
+                      '^feedback@',
+                      '^finance@',
+                      '^financial.aid@',
+                      '^cloud@',
+                      '^advertise@',
+                      '^advertising@',
+                      '^privacy@',
+                      '^user1@',
+                      '^user2@',
+                      '^webinfo@',
+                      'subscribe@',
+                      '^hi@',
+
+                      'webmaster@',
+                      'technicalsupport',
+                      'customersupport',
+                      'customer-service',
+                      'customer\.care',
+                      'customer\.service',
+                      'apache\.org',
+                      'apachecon\.com',
+                      '@abc\.com',
+                      'work@',
+                      'webteam@',
+                      'suport@',
+                      'support',
+                      'staff@',
+                      'site@',
+                      'servicio@',
+                      'service@',
+                      'services@',
+                      'servicio\.cliente@',
+                      'server@',
+                      'security@',
+                      'resume@',
+                      'report@',
+                      'reply@',
+                      'quest@',
+                      'questions@',
+                      'postmaster@',
+                      'office@',
+                      'helpdesk',
+                      'announce',
+
+
+                      ];
+
+const wellFormedEmail = ( email ) => {
+
+  const res = reToExcludeForWellForm.filter( ( re ) => 
+    email.toLowerCase().match(new RegExp(re) ));
+
+  if ( res && res.length > 0){
+
+    return false;
+  }else{
+
+    const re = /\S+@\S+\.\S+/;
+    return re.test(email);
+  }
+}
+
+const acceptableEmailForLowBounce = async (email) => {
 
   if( !email || email.length < 9 || email.length > 30 ){
     return false;
   }
-
-   
-  const reToExclude = [
- // To remove emails like
- // rizwest1975@yahoo.comm    
- // Hotro.ttvnol@gmail.comli 
-                        '@.*\.com[a-zA-Z0-9]+',
-                        '\#',
-                        '\\$',
-                        '\!',
-                        '\\*',
-                        '\\|',
-                        '\\^',
-                        '\\?',
-                        '^-', //starts with -
-                        '%',
-                        '=',
-// Adding info@... because of the high number of 
-// complaints. This can be revisted, and removed in the future
-                        '^info@',
-                        '^me@',
-                        '^mail@',
-                        '^user@',
-                        '^email',
-                        '^help@',
-                        '^hr@',
-                        '^cs@',
-                        '^legal@',
-                        '^user@',
-                        '^your@',
-                        '^license@',
-                        '^job@',
-                        '^jobs@',
-                        '^bugs@',
-                        '^you@',
-                        '^www@',
-                        '^xyz@',
-                        '^test',
-                        '^suporte@',
-                        '^service@',
-                        '^recruit@',
-                        '^privacy@',
-                        '^press@',
-                        '^pr@',
-                        '^policy@',
-                        '^policies@',
-                        '^password@',
-                        '^office@',
-                        '^example@',
-                        '^copyright@',
-                        '^contact',
-                        '^abc@',
-                        '^bounce@',
-                        '^admin@',
-                        '^sales@',
-                        '^service@',
-                        '^support@',
-                        '^abuse@',
-                        '^comercial@',
-                        '^contact@',
-                        '^contacto@',
-                        '^contactus@',
-                        '^contato@',
-                        '^hello@',
-                        '^hire@',
-                        '^mailbox@',
-                        '^mailmaster@',
-                        '^mailpoint@',
-                        '^finaid@',
-                        '^feedback@',
-                        '^finance@',
-                        '^financial.aid@',
-                        '^cloud@',
-                        '^advertise@',
-                        '^advertising@',
-                        '^privacy@',
-                        '^user1@',
-                        '^user2@',
-                        '^webinfo@',
-                        'subscribe@',
-                        '^hi@'
-
-
-                        ];
-
-
   const acceptableDomains = ['comcastbiz.net', 
                            '.company', 
                            'comperia.pl', 
                            'commnet.edu'];
-
   const prohibitedDomains = [
                               'apache.org',
                               'apachecon.com',
@@ -224,100 +317,21 @@ const acceptableEmail = async (email) => {
                               '@mail.ru',
                               '@inbox.ru',
                               '@reagan.com',
-
                            ];
                            
   // Exclude email from prohibitedDomains, then
-  // Exclude emails that match any re in reToExclude 
+  // Exclude emails that match any re in reToExcludeForLowBounce 
   // unless the email ends in a domain in acceptableDomains
   const prohibitedD = prohibitedDomains.filter( d => email.toLowerCase().endsWith(d.toLowerCase()) );
   if ( prohibitedD && prohibitedD.length > 0){
     return false;
   }
-
-// Make sure the email is not on the do-not-contact list
   
-
-  const prohibitedEmailMatches = ['webmaster@',
-                                  'technicalsupport',
-                                  'customersupport',
-                                  'customer-service',
-                                  'customer.care',
-                                  'customer.service',
-                                  'apache.org',
-                                  'apachecon.com',
-                                  'yourdomain.tld',
-                                  '@company.org',
-                                  '@example.com',
-                                  'noreply',
-                                  'no-reply',
-                                  'donotreply',
-                                  '@host.domain',
-                                  '@domain.',
-                                  '@email.',
-                                  '@yourdomain',
-                                  'yourname@',
-                                  'yourmail@',
-                                  '@email.com',
-                                  '@email.address',
-                                  'your_username@',
-                                  'username@',
-                                  'your-name@',
-                                  'xyz@',
-                                  '@abc.com',
-                                  '@xxx',
-                                  '@xx.xx',
-                                  'xxx@',
-                                  '@yyy',
-                                  'yyy@',
-                                  '@test.',
-                                  '@mydomain.com',
-                                  '@xx.xx',
-                                  'www.',
-                                  '@addr.com',
-                                  '@example.com',
-                                  'work@',
-                                  'webteam@',
-                                  'suport@',
-                                  'support',
-                                  'staff@',
-                                  '@nowhere.com',
-                                  '@somewhere.com',
-                                  'someone@',
-                                  'somebody@',
-                                  'site@',
-                                  'servicio@',
-                                  'service@',
-                                  'services@',
-                                  'servicio.cliente@',
-                                  'server@',
-                                  'sender@',
-                                  'sender1@',
-                                  'security@',
-                                  'root@',
-                                  'resume@',
-                                  'report@',
-                                  'reply@',
-                                  'quest@',
-                                  'questions@',
-                                  'postmaster@',
-                                  'office@',
-                                  '@localhost.com',
-                                  '@null.net',
-                                  '@somewhere.com',
-                                  '`',
-                                  '.lastname@',
-                                  '.firstname@',
-                                  'helpdesk',
-                                  'announce',
-                                  "'",
-                                  '"'
-                                ]; 
-  const prohibitedN = prohibitedEmailMatches.filter( d => email.toLowerCase().indexOf(d) > -1 );
-  if ( prohibitedN && prohibitedN.length > 0){
+  if ( ! wellFormedEmail(email) ){
     return false;
   }
 
+  // Make sure the email is not on the do-not-contact list
   // Enabling this would severely impact the performance. And there is no much benefit for it
   // const doNotContact = await promiseOfQuery('select l.email from leads l join lead_donotcontact dnc on l.id = dnc.lead_id where l.email = ?', email);
   // console.log('doNotContact result:',doNotContact);
@@ -330,7 +344,9 @@ const acceptableEmail = async (email) => {
   if (domains && domains.length > 0){
     return true;
   }else{
-    const res = reToExclude.filter( ( re ) => email.toLowerCase().match(new RegExp(re) ));
+    const res = reToExcludeForLowBounce.filter( 
+      ( re ) => email.toLowerCase().match(new RegExp(re) ));
+    
     if ( res && res.length > 0){
       return false;
     }else{
@@ -357,7 +373,8 @@ const contactDetails2List = async (contactDetails, url) =>{
         await memo;
 
         // Filter out invalid email
-        const testAcceptability = await acceptableEmail(v);
+        //const testAcceptability = await acceptableEmailForLowBounce(v);
+        const testAcceptability = wellFormedEmail(v);
         if(v && testAcceptability ){
           let emailDetails = extractNameFromEmail(v, '.');
 
@@ -524,7 +541,7 @@ const postContactToForm = async ( contact, formId )=>{
 const insertIntoDB = (table, columns, values)=>{
 
   const query = "insert into "+table+" (" + columns.join(',') + 
-  ") values (" + values.map(v => `'${v}'`).join(',') + ")" ;
+  ", date_added) values (" + values.map(v => `'${v}'`).join(',') + ", now())" ;
   console.log("Inserting into table: query:", query);
   mysqlDb.query(query, null, function (data, error) {       
     if (error){
@@ -546,13 +563,13 @@ const runQueryToDB = (query)=>{
   });
 }
 
-const insertiontQuery = (table, columns, values)=>{
+// const insertiontQuery = (table, columns, values)=>{
 
-  const query = "insert into "+table+" (" + columns.join(',') + 
-  ") values (" + values.map(v => `'${v}'`).join(',') + ")" ;
-  console.log("insertiontQuery into table: query:", query);
-  return query;
-}
+//   const query = "insert into "+table+" (" + columns.join(',') + 
+//   ") values (" + values.map(v => `'${v}'`).join(',') + ")" ;
+//   console.log("insertiontQuery into table: query:", query);
+//   return query;
+// }
 
 
 const promiseOfFormData = ( form, url ) => {
@@ -736,6 +753,58 @@ app.post('/ses/handle-bounces-and-complaints', async (req, res) => {
     console.error("Error handling response:", error);
     res.status(500).json({
       success: false,
+      message: error.message
+    });
+  }
+});
+
+app.get('/validation/well-formed-email', async (req, res) => {
+  try {
+    const response = wellFormedEmail(req.query.email);
+    if ( response ) {
+      res.status(200).json({
+        success: true,
+        result: true,
+        message: "Email is well formed"
+      });
+    }else {
+      res.status(200).json({
+        success: true,
+        result: false,
+        message: "Email is not well formed"
+      });
+    }    
+  } catch (error) {
+    console.error("Error handling response:", error);
+    res.status(500).json({
+      success: false,
+      result: false,
+      message: error.message
+    });
+  }
+});
+
+app.get('/validation/valid-for-low-bounce', async (req, res) => {
+  try {
+    const response = await acceptableEmailForLowBounce(req.query.email)
+    if ( response ) {
+      res.status(200).json({
+        success: true,
+        result: true,
+        message: "Email is valid for low bounce"
+      });
+    }else {
+      res.status(200).json({
+        success: true,
+        result: false,
+        message: "Email is not valid for low bounce"
+      });
+    }    
+  } catch (error) {
+    console.error("Error handling response:", error);
+    res.status(500).json({
+      success: false,
+      result: false,
       message: error.message
     });
   }
