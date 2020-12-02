@@ -294,10 +294,11 @@ const wellFormedEmail = ( email ) => {
     return re.test(email);
   }
 }
-
+const MIN_EMAIL_LENGTH = 9;
+const MAX_EMAIL_LENGTH = 40;
 const acceptableEmailForLowBounce = async (email) => {
 
-  if( !email || email.length < 9 || email.length > 30 ){
+  if( !email || email.length < MIN_EMAIL_LENGTH || email.length > MAX_EMAIL_LENGTH ){
     return false;
   }
   const acceptableDomains = ['comcastbiz.net', 
