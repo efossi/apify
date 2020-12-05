@@ -137,6 +137,8 @@ const reToExcludeForWellForm = [
                       '`',
                       "'",
                       '"',
+                      '\/',
+                      '\\\\',
 
                       'yourdomain\.tld',
                       '@company\.org',
